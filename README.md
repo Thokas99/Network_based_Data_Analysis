@@ -1,4 +1,4 @@
-# Draft_Lauria
+# Network-based Data Analysis
 Project for the curse of Network-based Data Analysis QCB 2023/2024
 
 
