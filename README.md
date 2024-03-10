@@ -5,7 +5,7 @@ Link for the report [here](https://www.overleaf.com/project/65e5fb710b468abfd7e6
 
 ## Introduction
 
-Welcome to the Network-Based Data Analysis project for the QCB 2023/2024 class. In this project, we will delve into the world of molecular profiling in biliary atresia, utilizing the dataset GSE15235 obtained from a prospective observational study conducted by the Biliary Atresia Research Consortium. This study aims to explore the molecular signatures associated with inflammation and fibrosis in the livers of infants diagnosed with biliary atresia.
+Welcome to the `Network-Based Data Analysis` project for the QCB 2023/2024 class. In this project, we will delve into the world of molecular profiling in biliary atresia, utilizing the dataset GSE15235 obtained from a prospective observational study conducted by the Biliary Atresia Research Consortium. This study aims to explore the molecular signatures associated with inflammation and fibrosis in the livers of infants diagnosed with biliary atresia.
 
 ### Project Overview
 
