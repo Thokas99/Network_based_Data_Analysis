@@ -38,7 +38,7 @@ We will employ R packages for machine learning to build and evaluate prediction 
 
 #### Key R Packages:
 - [`caret`](https://topepo.github.io/caret/): for building and evaluating predictive models.
-- [`glmnet`](https://cran.r-project.org/web/packages/glmnet/index.html): for fitting feature selection (LASSO).
+- [`glmnet`](https://cran.r-project.org/web/packages/glmnet/index.html): for fitting feature selection (relaxed LASSO / Elastic net).
 - `work in progress...`
 
 ### 3. Clinical Associations
