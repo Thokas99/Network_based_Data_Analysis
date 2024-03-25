@@ -11,15 +11,16 @@ Welcome to the `Network-Based Data Analysis` project for the QCB 2023/2024 class
 
 Our analysis will focus on the following key aspects:
 
-1. **Disease Staging Exploration:**
-   - Investigating the molecular signatures that distinguish between inflammation and fibrosis at the time of diagnosis.
-   - Exploring potential associations between molecular profiles and clinical outcomes.
+1. **Exploratory Data Analysis (EDA):**
+   - Preliminary approach to analyzing data, through visualization and summary statistics (UMAP and PCA ), to understand its structure, patterns, and characteristics
+   - Investigating the gene signatures that distinguish between inflammation and fibrosis at the time of diagnosis.
+   - Exploring potential associations between gene profiles and clinical outcomes.
 
-2. **Predictive Modeling:**
+3. **Predictive Modeling:**
    - Utilizing prediction analysis models to classify livers into inflammation or fibrosis based on gene expression profiles.
    - Validating predictions through statistical analyses, including cross-validation on each model.
 
-3. **Clinical Associations:**
+4. **Clinical Associations:**
    - Investigating the relationship between molecular signatures, the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo) will be used to manage this part.
 
 ## Project Sections
