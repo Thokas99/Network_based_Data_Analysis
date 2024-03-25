@@ -5,7 +5,7 @@ Link for the report [here](https://www.overleaf.com/project/65e5fb710b468abfd7e6
 
 ## Introduction
 
-Welcome to the `Network-Based Data Analysis` project for the QCB 2023/2024 class. In this project, we will delve into the world of molecular profiling in biliary atresia, utilizing the dataset GSE15235 obtained from a prospective observational study conducted by the Biliary Atresia Research Consortium. This study aims to explore the molecular signatures associated with inflammation and fibrosis in the livers of infants diagnosed with biliary atresia.
+Welcome to the `Network-Based Data Analysis` project for the QCB 2023/2024 class. In this project, we will delve into the world of molecular profiling in biliary atresia, utilizing the dataset GSE15235 obtained from a prospective observational study conducted by [Moyer, Katie, et al.](https://link.springer.com/article/10.1186/gm154). This study aims to explore the molecular signatures associated with inflammation and fibrosis in the livers of infants diagnosed with biliary atresia.
 
 ### Project Overview
 
@@ -17,11 +17,17 @@ Our analysis will focus on the following key aspects:
    - Exploring potential associations between gene profiles and clinical outcomes.
 
 3. **Predictive Modeling:**
+   - Feature selction to understand the genes which most contributes to each class.
    - Utilizing prediction analysis models to classify livers into inflammation or fibrosis based on gene expression profiles.
    - Validating predictions through statistical analyses, including cross-validation on each model.
 
-4. **Clinical Associations:**
-   - Investigating the relationship between molecular signatures, the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo) will be used to manage this part.
+4. **Differential expression genes (DEGs)**
+   - Perform differential expression analysis to identify genes showing significant expression changes between experimental conditions.
+   - Utilize Enrichr for gene set enrichment analysis to uncover enriched functional categories and pathways associated with the identified differentially expressed genes.
+   - Explore drug signatures and pharmacological data to investigate potential drug targets and mechanisms of action related to the observed gene expression changes.
+
+6. **Clinical Associations:**
+   - Investigating the relationship between gene signatures, the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo) will be used to manage this part.
 
 ## Project Sections
 
@@ -31,8 +37,7 @@ In this section, we will perform an exploratory analysis of the dataset, visuali
 
 #### Sample Visualizations:
 - Boxplots depicting gene expression dataset and how is distributed.
-- Distribution plots illustrating the age distribution of infants with distinct molecular signatures.
-
+- 
 ### 2. Predictive Modeling
 
 We will employ R packages for machine learning to build and evaluate prediction models based on the unique molecular signatures identified in the study.
@@ -40,7 +45,6 @@ We will employ R packages for machine learning to build and evaluate prediction 
 #### Key R Packages:
 - [`caret`](https://topepo.github.io/caret/): for building and evaluating predictive models.
 - [`glmnet`](https://cran.r-project.org/web/packages/glmnet/index.html): for fitting feature selection (relaxed LASSO / Elastic net).
-- `work in progress...`
 
 ### 3. Clinical Associations
 
