@@ -56,6 +56,6 @@ This section will focus on exploring the clinical relevance of molecular signatu
 ## Conclusion
 
 By the end of this project, we aim to provide a comprehensive analysis of the biliary atresia dataset, shedding light on the potential network-based interactions underlying disease progression and clinical outcomes.
-`work in progress...`
-`work in progress...`
-`work in progress...`
+- `work in progress...`
+- `work in progress...`
+- `work in progress...`
