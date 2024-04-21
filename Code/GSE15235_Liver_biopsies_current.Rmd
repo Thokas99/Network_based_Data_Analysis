@@ -1,0 +1,828 @@
+---
+title: "Exam_Lauria"
+author: "Thomas Sirchi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Loading packages
+
+Store package names in a vectors for ease of access and to load them easily
+
+```{r setup, message=FALSE, warning=FALSE}
+# List of R packages used in the script with a brief description of their purposes
+PACKAGES <- c(
+  "GEOquery",        # For accessing and retrieving Gene Expression Omnibus (GEO) data
+  "limma",           # For linear modeling of microarray data and differential expression analysis
+  "plotly",          # Interactive plotting library for creating dynamic and interactive visualizations
+  "RColorBrewer",    # Color palettes for enhancing the visual appeal of plots and charts
+  "factoextra",      # Provides additional functions for enhanced ggplot-based plots in multivariate analysis
+  "FactoMineR",      # For multivariate exploratory data analysis, including PCA and clustering
+  "cluster",         # To perform PAM (Partitioning Around Medoids) and other clustering methods
+  "glmnet",          # To perform LASSO (Least Absolute Shrinkage and Selection Operator) regression for feature selection
+  "biomaRt",         # Interface to access and query BioMart databases for biological annotations
+  "enrichR",         # For gene set enrichment analysis to identify enriched biological pathways
+  "rScudo",          # To perform SCUDO (Signature-based Clustering for Diagnostic Purposes) for classification
+  "EnhancedVolcano", # For volcano plots with enhanced features for visualizing differential expression results
+  "umap",            # For dimensionality reduction and visualization using Uniform Manifold Approximation and Projection
+  "gprofiler2",      # Tools for functional enrichment analysis and gene set analysis
+  "caret",           # Comprehensive machine learning toolkit for classification and regression training
+  "tidymodels",       # Tidy modeling framework for streamlined machine learning workflows
+  "smotefamily"
+)
+
+
+
+invisible(lapply(PACKAGES, library, character.only = TRUE))
+gc()
+# Install packages (uncomment the line below to install)
+# install.packages(PACKAGES)
+```
+
+
+Print current system info, R and packages versions (for reproducibility)
+
+```{r sessionInfo}
+sessionInfo()
+```
+
+## Data retrieval
+
+Retrieve dataset from GEO
+
+```{r Retrieve dataset from GEO, message=FALSE, warning=FALSE}
+#gset2 <- getGEO("GSE15235", GSEMatrix =TRUE,destdir = ".")
+
+# Extract the data
+exp_data <- data.frame(gset2[["GSE15235_series_matrix.txt.gz"]]@assayData[["exprs"]])
+exp_data <- na.omit(exp_data)
+head(exp_data)
+```
+
+# Metatdata manipulation
+
+recover the gene ids and disease state from the metadata.
+
+```{r Metadata extraction}
+# general metatdata on the disease
+metadata <- data.frame(gset2[["GSE15235_series_matrix.txt.gz"]]@phenoData@data)
+metadata <- metadata %>% 
+  dplyr::rename(molecular_group = molecular.group.ch1)
+#write.csv(metadata, file = 'metadata1.csv', row.names = TRUE)
+
+disease_state <- subset(metadata, select = molecular_group)
+
+# general metatdata on the Affimatrix, experiment, gene symbol etc. 
+metadata2 <- data.frame(gset2[["GSE15235_series_matrix.txt.gz"]]@featureData@data)
+#write.csv(metadata2, file = 'metadata2.csv', row.names = TRUE)
+
+# retrive more metadata
+metadata3 <- read.csv("tabula-gm154-S3.csv")
+
+metadata3 <- metadata3 %>%
+  slice(-1) %>%
+  slice(-1) %>%
+  dplyr::select(-c("CB","X","Weight.Z")) %>%
+  mutate_all(~ifelse(. == "N/A", "Unknown", .))
+Clinical <- read.csv("Clinical.csv")
+
+metadata <- metadata %>%
+  bind_cols(metadata3) %>%
+  bind_cols(Clinical) %>%
+  mutate(
+    Age = as.numeric(Age),
+    Alive.or.transplant = ifelse(Alive.or.transplant != "Alive", "transplant", Alive.or.transplant)
+  )
+
+head(metadata)
+head(metadata2)
+rm(metadata3,Clinical)
+```
+
+
+```{r Gene name conversion}
+Gene_Symbols <- gprofiler2::gconvert(query = metadata2$ID, 
+                                   organism = "hsapiens",
+                                   numeric_ns = "AFFY_HG_U133_PLUS_2",
+                                   target="ARRAYEXPRESS", 
+                                   mthreshold = Inf, 
+                                   filter_na = TRUE)
+
+Gene_Symbols <- Gene_Symbols %>%
+  dplyr::distinct(input, .keep_all = TRUE) %>% # Keep only unique IDs while retaining all columns
+  dplyr::mutate(probe_id = input ) %>%
+  dplyr::select(probe_id, target, name, description) %>% # Select specified columns
+  dplyr::filter(name != "none")
+  
+head(Gene_Symbols)
+```
+
+```{r}
+# Boxplot
+ggplot(metadata, aes(x = molecular_group, y = Age, fill = molecular_group)) +
+  geom_boxplot() +
+  xlab("Molecular Group") +
+  ylab("Age (days)") +
+  ggtitle("Distribution of Age by Molecular Group")
+
+# Line plot of age distribution for each subtype
+ggplot(metadata, aes(x = Age, color = molecular_group)) +
+  geom_density() +
+  xlab("Age (days)") +
+  ylab("Density") +
+  ggtitle("Distribution of Age by Molecular Group")
+```
+
+# FIRST FILTER BY GENE NAMES
+
+```{r Data Preprocessing: center the log data, warning=FALSE}
+#data_recipe <- recipe(~ ., data = exp_data) %>%
+  # Log transform and center numeric variables
+  #step_scale(all_numeric()) %>%
+  #step_log(all_numeric()) %>%
+  #step_center(all_numeric())
+
+# Preprocess data
+#data_preprocessed <- prep(data_recipe, data = exp_data)
+
+# Transform the data
+#temp_data <- data.frame(bake(data_preprocessed, new_data = NULL))
+#rownames(temp_data) <- rownames(exp_data)
+
+# traspose the 
+t_data <- (t(exp_data))
+
+t_data <- cbind(t_data, disease_state)
+
+t_data <- t_data %>%
+  dplyr::select(Gene_Symbols$probe_id)
+
+t_data <- cbind(t_data, disease_state)
+head(t_data)
+# FIRST FILTER BY GENE NAMES
+
+
+```
+
+The dataset has alredy been scaled by the authors, let's check with a boxplot
+
+```{r Boxplots, message=FALSE, warning=FALSE}
+# The dataset has alredy been scaled by the authors
+# Original Data Boxplot
+boxplot(head(exp_data, 2000), 
+         main = "Original Data", 
+         col = "skyblue", 
+         ylab = "Values", 
+         xlab = "Original Data Set",
+         border = "black")
+#abline(h = 0, lty = 1, col = "red")  # Reference line at 0
+```
+
+## Unsupervised methods (machine learning methods)
+#PCA
+
+```{r Principal component analysis PCA, message=FALSE, warning=FALSE}
+
+# Perform Principal Component Analysis (PCA) on the transpose of the cleaned data
+res_pca <- prcomp(t_data[,-ncol(t_data)])
+
+# Extract eigenvalues and variance contributions from the PCA results
+eig_PCA <- get_eig(res_pca)
+
+# Transform the principal components into a data frame
+components <- res_pca[["x"]]
+components <- data.frame(components)
+
+# Combine the principal components with the original disease_state metadata
+components <- cbind(components, disease_state)
+
+#Scree plot
+# Plotting eigenvalues
+fviz_eig(res_pca, addlabels = TRUE, barcolor = "skyblue",
+         barfill = "skyblue", pointsize = 5, main = "Scree Plot of PCA",
+         xlab = "Principal Component", ylab = "Eigenvalue")
+
+# Trigger garbage collection to free up memory
+gc()
+
+# Remove unnecessary objects
+rm(eig_PCA,res_pca)
+
+```
+
+```{r Plot PCA, message=FALSE, warning=FALSE}
+
+# Create a 2D scatter plot using Plotly
+fig2D <- plot_ly(components, 
+                 x = ~PC1, y = ~PC2, #z = ~PC3,
+                 color = metadata$molecular_group,
+                 colors = brewer.pal(n = 4, name = "RdBu"),  
+                 mode = 'markers',
+                 #type = "scatter",
+                 marker = list(size = 10, opacity = 0.8),
+                 showlegend = TRUE) %>%
+  layout(title = "PCA Plot",
+         xaxis = list(title = "PCA 1"),
+         yaxis = list(title = "PCA 2"),
+         legend = list(title = "Molecular Group"),
+         hovermode = "closest")
+
+# Display the 2D scatter plot
+fig2D
+
+# Remove the 2D scatter plot object to free up memory
+rm(fig2D)
+
+```
+
+# Uniform Manifold Approximation and Projection (UMAP)
+
+```{r UMAP}
+set.seed(1234)
+#library(umap)
+
+# Perform UMAP dimensionality reduction
+umap_result <- umap(t_data[,-ncol(t_data)],
+                    n_neighbors = 7,          
+                    #min_dist = 0.5,          
+                    metric = "euclidean",    
+                    n_components = 2
+                    )
+
+umap_df <- data.frame(umap_result$layout)
+colnames(umap_df) <- c("umap_1","umap_2")# ,"umap_3"
+rownames(umap_df) <-  rownames(t_data) 
+# Print UMAP
+print(umap_result)
+
+umap_df <- cbind(umap_df,disease_state)
+# Create a 2D scatter plot using Plotly
+# Create the plot
+fig2D <- plot_ly(umap_df, 
+                 x = ~umap_1, y = ~umap_2,#z = ~umap_3,
+                 color = umap_df$molecular_group,
+                 colors = brewer.pal(n = 4, name = "RdBu"),  
+                 mode = 'markers',
+                 type = "scatter",
+                 #type = "scatter3d",
+                 marker = list(size = 10, opacity = 0.8),
+                 showlegend = TRUE,
+                 text = metadata$geo_accession) %>%
+  layout(title = "UMAP Plot",
+         xaxis = list(title = "UMAP 1"),
+         yaxis = list(title = "UMAP 2"),
+         legend = list(title = "Molecular Group"),
+         hovermode = "closest")
+
+# Display the plot
+fig2D
+# Remove the 2D scatter plot object to free up memory
+rm(fig2D,umap_result)
+```
+
+# PAM (Partitioning Around Medoids)
+
+```{r Find best K , message=FALSE, warning=FALSE}
+set.seed(1234)
+
+# Visualize the optimal number of clusters using the elbow method
+fviz_nbclust(t_data[,-ncol(t_data)], FUNcluster = pam, method = "wss", k.max = 5)
+fviz_nbclust(t_data[,-ncol(t_data)], FUNcluster = pam, method = "silhouette", k.max = 5)
+#fviz_nbclust(t(exp_data), FUNcluster = pam, method = "gap_stat", k.max = 5)
+```
+
+```{r Compute PAM , message=FALSE, warning=FALSE}
+set.seed(1234)
+K <- 2
+# Perform PAM clustering
+pam_result <- pam(t_data[,-ncol(t_data)], K)
+
+# Access cluster assignments and medoids
+cluster_assignments <- pam_result$clustering
+umap_df$cluster_assignments <- as.character(cluster_assignments)
+
+medoids <- pam_result$medoids
+
+# Display a table of cluster assignments and disease states
+table(cluster_assignments, t(disease_state))
+
+# Store cluster assignments in components$pam
+#components <- cbind(components, cluster_assignments)
+cluster_assignments <- data.frame(cluster_assignments)
+rownames(cluster_assignments) <- rownames(t_data)
+
+fig2D <- plot_ly(umap_df, 
+                 x = ~umap_1, y = ~umap_2,#z = ~umap_3,
+                 color = umap_df$cluster_assignments,
+                 colors = brewer.pal(n = 4, name = "RdBu"),  
+                 mode = 'markers',
+                 type = "scatter",
+                 marker = list(size = 10, opacity = 0.8),
+                 showlegend = TRUE,
+                 text = metadata$geo_accession) %>%
+  layout(title = "UMAP Plot",
+         xaxis = list(title = "UMAP 1"),
+         yaxis = list(title = "UMAP 2"),
+         legend = list(title = "Molecular Group"),
+         hovermode = "closest")
+
+# Display the plot
+fig2D
+
+# Remove unnecessary objects
+rm(pam_result,K,medoids)
+
+
+```
+
+# hierarchical clustering
+
+```{r hierarchical, message=FALSE, warning=FALSE}
+# Calculate distances and create a dendrogram
+dm <- dist(t_data[,-ncol(t_data)])
+#Ward’s Method: Minimizes the increase in variance when merging clusters. It aims to create compact, balanced clusters by considering within-cluster variance.
+hc <- hclust(dm, method = "complete")
+plot(hc, hang = -1)
+rect.hclust(hc, k = 2, border = 'lightcoral')
+
+# Assign cluster memberships
+clust.vec.2 <- cutree(hc, k = 2)
+# Visualize clusters
+fviz_cluster(list(data = t(exp_data), cluster = clust.vec.2))
+
+umap_df$hclust <- clust.vec.2
+
+# Remove unnecessary objects
+rm(dm, hc,clust.vec.2)
+
+```
+
+# Supervised learning techniques
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Filter out 'Unclassified' data
+ML_data <- subset(t_data, molecular_group != "Unclassified")
+
+# Store 'Unclassified' data separately
+Unclassified <- subset(t_data, molecular_group == "Unclassified")
+
+# Create training and testing indices
+trainIndex <- createDataPartition(ML_data$molecular_group, p = 0.7, list = FALSE)
+
+# Create training data
+trainData <- ML_data[trainIndex, ]
+
+# Convert the target variable to a factor and remove it from the training data
+trainData_l <- as.factor(trainData$molecular_group)
+trainData$molecular_group <- NULL
+
+# Apply ADASYN transformation to the training data
+#trainData <- ADAS(trainData, target = trainData_l)
+
+# Convert the target variable to a factor and remove it from the training data again 
+#trainData_l <- as.factor(trainData$class)
+#trainData$class <- NULL
+
+# Extract the transformed data from the ADASYN object
+#trainData <- trainData$data
+
+# Create testing data
+testData <- ML_data[-trainIndex, ]
+
+# Convert the target variable to a factor and remove it from the testing data
+testData_l <- as.factor(testData$molecular_group)
+testData$molecular_group <- NULL
+
+
+```
+
+```{r tuneRF for mtry}
+
+
+```
+
+
+```{r}
+set.seed(1234)
+# Define the training control
+ctrl <- trainControl(method = "cv", 
+                     number = 2, 
+                     savePredictions = "final",
+                     summaryFunction = defaultSummary,
+                     search = "random",
+                     sampling = "smote",
+                     allowParallel = T)
+
+param_grid <- expand.grid(mtry = c(6746),
+                          splitrule = c("gini"),
+                          min.node.size = c(2,3))
+
+# Train the ranger model with cross-validation
+set.seed(123)  # for reproducibility
+model <- train(y = trainData_l, 
+               x = trainData, 
+               method = "ranger",
+               num.trees=500,
+               importance = "permutation",
+               num.threads = 10,
+               trControl = ctrl,
+               tuneGrid = param_grid
+               )
+
+# Print the model
+summary(model)
+print(model)
+plot(model)
+
+# Summarize results
+print(model$results)
+
+fitted_ranger <- model$finalModel
+
+predictions <- predict(fitted_ranger, testData)
+# print CM
+cm <- confusionMatrix(predictions$predictions, testData_l, mode = "everything")
+cm
+# Get confusion matrix data
+conf_matrix_data <- as.data.frame(as.table(cm$table))
+
+# Plot confusion matrix using ggplot2
+ggplot(conf_matrix_data, aes(x = Prediction, y = Reference, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%d", Freq)), vjust = 0.5) +
+  scale_fill_gradient(low = "white", high = "lightcoral") +
+  theme_minimal() +
+  labs(x = "Predicted", y = "Actual", fill = "Frequency", title = "Confusion Matrix")+
+  theme(legend.position = "none")
+
+RF_var_importance3 <- 
+  data.frame(importance = ranger::importance(fitted_ranger)) %>%
+  dplyr::mutate(probe_id = rownames(.)) %>%
+  dplyr::arrange(desc(importance)) 
+
+RF_var_importance3 <- left_join(RF_var_importance3, Gene_Symbols, by = "probe_id") %>%
+  na.omit() %>%
+  dplyr::distinct(name, .keep_all = TRUE)
+
+high_threshold <- max(RF_var_importance3$importance) * 0.85
+medium_threshold <- max(RF_var_importance3$importance) * 0.75
+
+# Categorize values
+RF_var_importance3$Category <- cut(RF_var_importance3$importance,
+                     breaks = c(0, medium_threshold, high_threshold, Inf),
+                     labels = c("Low", "Medium", "High"))
+
+RF_var_importance3 <- subset(RF_var_importance3, name != "None")
+head(RF_var_importance3)
+# Create the plot
+ggplot(head(RF_var_importance3, 25), aes(x = importance, y = reorder(name, importance), fill = Category)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("lightcoral", "lightgreen", "skyblue")) +  # Choose colors for each category
+  labs(title = "Top 25 Variable Importance Plot RF", x = "Importance", y = "Variable") +
+  guides(fill = guide_legend(reverse = TRUE))
+
+RF_results3 <- data.frame(predict(fitted_ranger, data = Unclassified[,-ncol(Unclassified)]))
+rownames(RF_results3) <- rownames(Unclassified)
+
+RF_results3
+
+```
+
+```{r Check the importance of the genes in the division in UMAP}
+# 1
+t_data <- t_data %>% 
+  dplyr::select(-`210244_at`)
+# 2
+t_data <- t_data %>% #`````
+  dplyr::select(-`202924_s_at`)
+```
+
+```{r}
+bt <- metadata$molecular_group
+
+# Replace 'a' values with 'b'
+bt <- gsub('Unclassified', 'Inflammation', bt)
+
+heat_data <- t_data %>%
+  dplyr::select(c("210244_at"  , "1558000_at"))
+
+# Biliary atresia with splenic malformation syndrome (BASM) designates the association of biliary atresia (see this term) and splenic abnormalities (mainly polysplenia and less frequently asplenia, double spleen)
+
+# Biliary atresia is an obstructive cholangiopathy of unknown etiology involving both the intrahepatic and extrahepatic bile ducts
+library("pheatmap")
+pheatmap(heat_data, clustering_distance_rows = "euclidean", clustering_distance_cols = "euclidean",legend = T,labels_row = bt)
+
+```
+
+# Set up parallel backend
+```{r Create parallel cluster}
+cl <- parallel::makePSOCKcluster(5)
+doParallel::registerDoParallel(cl)
+```
+
+# Feature selection with LASSO (Least Absolute Shrinkage and Selection Operator)
+```{r Tuning LASSO}
+set.seed(1234)
+# Number coating the values
+## Specify the columns to be label encoded
+columns_to_encode <- c("molecular_group")
+Lasso_data <- subset(t_data, molecular_group != "Unclassified" )
+Lasso_data <- t_data %>% 
+  mutate_at(columns_to_encode, as.factor)
+Lasso_data$molecular_group <- as.numeric(Lasso_data$molecular_group)
+
+# Standardize predictors (recommended for lasso)
+X <- as.matrix(Lasso_data[, -which(colnames(Lasso_data) == "molecular_group")])
+
+# Perform cross-validation for Lasso regression
+cv_lasso <- cv.glmnet(
+  x = X,  # Predictor matrix
+  y = Lasso_data$molecular_group,  # Response variable
+  family = "gaussian",  # Gaussian family for regression
+  alpha = 0.1,  # Lasso penalty parameter (0 for ridge, 1 for Lasso)
+  grouped = FALSE,  # Indicate whether variables are grouped
+  parallel = TRUE,  # Use parallel computation if available
+  nlambda = 200,  # Number of lambda values to use
+  relax = TRUE,  # Relax convergence criterion
+  type.measure = "mse",  # Type of performance measure (Mean Squared Error)
+  #type.gaussian = "naive",  # Type of Gaussian assumption
+  nfolds = 5,  # Number of cross-validation folds
+)
+
+plot(cv_lasso)
+
+print(cv_lasso)
+optimal_lambda <- cv_lasso$lambda.min
+
+# Remove unnecessary objects
+rm(columns_to_encode, cv_lasso)
+
+```
+
+```{r Fit LASSO}
+set.seed(1234)
+# Extract predictors and response
+X <- as.matrix(subset(Lasso_data, select = -ncol(Lasso_data)))  # Exclude the response variable
+y <- as.matrix(Lasso_data$molecular_group)
+
+# Fit a lasso regression model
+lasso_model <- glmnet(X, y, 
+                      alpha = 0.1, 
+                      lambda = optimal_lambda,
+                      family = "gaussian",
+                      parallel = TRUE,
+                      type.measure = "mse",
+                      type.gaussian = "naive",
+                      relax = TRUE)
+
+# Display selected features
+print(lasso_model)
+plot(coef(lasso_model, s = optimal_lambda))
+# Add title
+title("Lasso Coefficients Path")
+
+to_filter <- names(lasso_model$beta[, 1][lasso_model$beta[, 1] != 0])
+to_filter <- c(to_filter, "1552481_s_at")
+names_imp <- data.frame(lasso_model$beta[, 1][lasso_model$beta[, 1] != 0])
+# Extract non-zero coefficients from the Lasso model
+selected_features <- coef(lasso_model, s = optimal_lambda, exact = TRUE, x = X, y = y)
+
+# Filter the original dataset based on selected features
+df_filtered <- subset(t_data, select = to_filter)
+#new_colnames <- paste0("i", colnames(df_filtered))
+#colnames(df_filtered) <- new_colnames
+df_filtered <- cbind(df_filtered, disease_state)
+
+# Remove unnecessary objects
+rm(X, y, to_filter, selected_features,optimal_lambda,names_imp,Lasso_data, lasso_model)
+
+```
+
+# Stop cluster
+```{r Stop parallel}
+parallel::stopCluster(cl)
+rm(cl)
+```
+
+# DEGS with limma
+```{r Run the degs}
+set.seed(1234)
+
+bt <- metadata$molecular_group
+
+# Replace 'a' values with 'b'
+disease_state$molecular_group <- gsub('Unclassified', 'Inflammation', bt)
+# Create a design matrix without an intercept for two groups
+design <- model.matrix(~ 0 + disease_state$molecular_group)
+colnames(design) <- c("Fibrosis","Inflammation")
+
+# Fit a linear model to the log-transformed data
+fit <- lmFit(t(t_data[,-ncol(t_data)]), design)
+
+# Specify contrasts of interest between Fibrosis and Inflammation
+contrast.matrix <- makeContrasts(Fibrosis - Inflammation, levels = design)
+
+# Apply empirical Bayes moderation to the linear model fit
+fit <- eBayes(fit)
+
+# Extract the top differentially expressed genes based on the specified contrast
+de.genes <- topTable(fit, coef = 1,p.value = 0.001, sort.by = "logFC", number=Inf,adjust="BH")
+de.genes2 <- topTable(fit, coef = 2,p.value = 0.001, sort.by = "logFC",number=Inf,adjust="BH")
+
+# Assuming de.genes is your data frame with the differential expression results
+volcano_plot_Fibrosis <- EnhancedVolcano(de.genes,
+                                lab = rownames(de.genes),
+                                x = 'logFC',
+                                y = 'P.Value',
+                                title = 'Volcano plot of Fibrosis DEGs',
+                                pCutoff = 0.001,
+                                FCcutoff = 1.5,
+                                pointSize = 2.0,
+                                labSize = 4.0,
+                                legendLabSize = 10,
+                                legendIconSize = 3.0,
+                                drawConnectors = F,
+                                widthConnectors = 0.5)
+
+print(volcano_plot_Fibrosis)
+
+
+# Assuming de.genes is your data frame with the differential expression results
+volcano_plot_Inflammation <- EnhancedVolcano(de.genes2,
+                                lab = rownames(de.genes2),
+                                x = 'logFC',
+                                y = 'P.Value',
+                                title = 'Volcano plot of Inflammation DEGs',
+                                pCutoff = 0.001,
+                                FCcutoff = 1.5,
+                                pointSize = 2.0,
+                                labSize = 4.0,
+                                legendLabSize = 10,
+                                legendIconSize = 3.0,
+                                drawConnectors = F,
+                                widthConnectors = 0.5)
+
+print(volcano_plot_Inflammation)
+
+rm(volcano_plot_Fibrosis,volcano_plot_Inflammation,fit,bt,design,contrast.matrix)
+```
+
+```{r DEGs results}
+
+filtered_Fibrosis <- de.genes %>%
+  dplyr::select(logFC, P.Value) %>%
+  mutate(probe_id = rownames(de.genes)) %>%
+  filter(logFC > 1.5 | logFC < -1.5 & P.Value < 0.001)  %>%
+  #arrange(-logFC)
+  arrange(P.Value) 
+rownames(filtered_Fibrosis) <- filtered_Fibrosis$probe_id
+
+filtered_Inflammation <- de.genes2 %>%
+  dplyr::select(logFC, P.Value) %>%
+  mutate(probe_id = rownames(de.genes2)) %>%
+  filter(logFC > 1.5 | logFC < -1.5 & P.Value < 0.001)  %>%
+  #arrange(-logFC)
+  arrange(P.Value)
+rownames(filtered_Inflammation) <- filtered_Inflammation$probe_id
+# Found gene name
+filtered_Fibrosis <- filtered_Fibrosis %>% 
+  inner_join(Gene_Symbols, by = "probe_id")%>%
+  dplyr::distinct(name, .keep_all = TRUE)
+
+filtered_Inflammation <- filtered_Inflammation %>% 
+  inner_join(Gene_Symbols, by = "probe_id")%>%
+  dplyr::distinct(name, .keep_all = TRUE)
+
+write.csv(na.omit(filtered_Inflammation$name), file = 'DEG_to_STRING.csv', row.names = F)
+
+#rm(de.genes,de.genes2)
+```
+
+# ORA enrichmentr
+
+```{r ORA with enrich-R}
+
+# List available databases from Enrichr
+dbs <- listEnrichrDbs()
+dbs <- dbs[order(dbs$libraryName),]
+Databases <- data.frame(dbs$libraryName)
+
+# Enrichment analysis for DrugMatrix and IDG_Drug_Targets_2022 databases
+
+# Define the databases for enrichment analysis
+dbs_dd <- c("DrugMatrix")
+
+dbs_bp<- c("GO_Biological_Process_2023","GO_Molecular_Function_2023","WikiPathway_2023_Human")
+
+# Perform enrichment analysis GO
+Fibrosis_GO <- enrichr(genes = (filtered_Fibrosis$name), databases = dbs_bp)
+
+Inflammation_GO <- enrichr(genes = filtered_Inflammation$name, databases = dbs_bp)
+
+plotEnrich(Fibrosis_GO[[1]], showTerms = 20, numChar = 60, y = "Count", orderBy = "Combined.Score", title = "ORA enrichment Fibrosis BP")
+plotEnrich(Inflammation_GO[[1]], showTerms = 20, numChar = 60, y = "Count", orderBy = "Combined.Score", title = "ORA enrichment Inflammation BP")
+
+# Perform enrichment analysis drugmatrix
+#upClinical_Fibrosis <- enrichr(genes = filtered_Fibrosis$Gene.Symbol, databases = dbs_dd)
+
+#upClinical_Inflammation <- enrichr(genes = filtered_Inflammation$Gene.Symbol, databases = dbs_dd)
+#plotEnrich(upClinical_Fibrosis[[1]], showTerms = 20, numChar = 50, y = "Count", orderBy = "Combined.Score")
+#plotEnrich(upClinical_Inflammation[[1]], showTerms = 20, numChar = 50, y = "Count", orderBy = "Combined.Score")
+
+rm(dbs,Databases)
+```
+
+# GSEA with gprofiler
+
+```{r GSEA }
+# Load the gprofiler2 library
+library(gprofiler2)
+
+# Perform over-representation analysis using GOST (Gene Ontology Semantic Similarity)
+# 'res_gost' will store the results of the analysis
+res_gost <- gost(
+  query = filtered_Inflammation$name,              # The list of gene symbols to analyze
+  organism = "hsapiens",                  # The organism for the analysis (Homo sapiens)
+  ordered_query = T,                      # If TRUE, the query is treated as an ordered list as a GSEA
+  multi_query = FALSE,                    # If TRUE, allows multiple queries in a single run
+  significant = TRUE,                     # If TRUE, only returns significant results
+  exclude_iea = FALSE,                    # If TRUE, excludes electronically inferred annotations
+  measure_underrepresentation = FALSE,    # If TRUE, measures underrepresentation of terms
+  evcodes = FALSE,                        # If TRUE, includes evidence codes in the results
+  user_threshold = 0.001,                   # Sets the significance threshold for the analysis
+  custom_bg = NULL,                       # Allows specifying a custom background gene set
+  numeric_ns = "",                        # Numeric namespace for the query
+  sources = c("GO:BP", "GO:MF", "REAC", "WP","KEGG"),  # Data sources to use (GO: Biological Process, Molecular Function, Cellular Component)
+  as_short_link = FALSE                   # If TRUE, returns a short link to the results
+)
+
+# Plot the results of the GOST analysis
+# 'plot_gost' will store the plot object
+plot_gost <- gostplot(
+  res_gost,                               # The GOST results to plot
+  capped = TRUE,                          # If TRUE, caps the number of displayed terms
+  interactive = TRUE                      # If TRUE, creates an interactive plot
+)
+
+# Display the plot
+plot_gost
+data_GOST <- data.frame(res_gost[["result"]])
+```
+
+# SCUDO draft
+```{r test SCUDO}
+set.seed(1234)
+bt <- metadata$molecular_group
+
+# Replace 'a' values with 'b'
+bt <- gsub('Unclassified', 'Inflammation', bt)
+
+bt <- as.factor(stringr::str_extract(bt, "^."))
+
+# Extract the right object 
+exp_set <- gset2[["GSE15235_series_matrix.txt.gz"]]
+
+inTrain <- caret::createDataPartition(bt, list = FALSE)
+trainData <- exp_set[, inTrain]
+testData <- exp_set[, -inTrain]
+
+trainRes <- scudoTrain(trainData, groups = bt[inTrain], nTop = 500,
+    nBottom = 500,alpha = 0.01,foldChange = T,featureSel = T)
+trainRes
+
+upSignatures(trainRes)[1:5,1:5]
+
+consensusUpSignatures(trainRes)[1:5, ]
+
+testNet <- scudoNetwork(trainRes,N = 0.33)
+scudoPlot(testNet, vertex.label = NA)
+
+```
+
+```{r}
+set.seed(1234)
+testRes <- scudoTest(trainRes, testData, bt[-inTrain], nTop = 1000,
+    nBottom = 1000)
+testRes
+
+testNet <- scudoNetwork(testRes, N = 0.33)
+scudoPlot(testNet, vertex.label = NA)
+
+testClust <- igraph::cluster_spinglass(testNet,spins = 5)
+plot(testClust, testNet, vertex.label = NA)
+```
+
+```{r}
+set.seed(1234)
+classRes <- scudoClassify(trainData, testData, N = 0.33, nTop = 500,
+    nBottom = 500, trainGroups = bt[inTrain], alpha = 0.1)
+
+classRes$predicted
+
+caret::confusionMatrix(classRes$predicted, bt[-inTrain])
+
+rm(classRes)
+```
