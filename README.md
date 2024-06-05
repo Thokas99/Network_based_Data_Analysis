@@ -23,8 +23,7 @@ Our analysis will focus on the following key aspects:
 
 4. **Differential expression genes (DEGs)**
    - Perform differential expression analysis to identify genes showing significant expression changes between experimental conditions.
-   - Utilize Enrichr for gene set enrichment analysis to uncover enriched functional categories and pathways associated with the identified differentially expressed genes.
-   - Explore drug signatures and pharmacological data to investigate potential drug targets and mechanisms of action related to the observed gene expression changes.
+   - Utilize Enrichr to Explore drug signatures and pharmacological data to investigate potential drug targets and mechanisms of action related to the observed gene expression changes.
 
 5. **Gene ontology and network:**
    - Investigating the relationship between gene signatures, the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo) will be used.
