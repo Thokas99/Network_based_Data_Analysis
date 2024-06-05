@@ -12,12 +12,12 @@ Welcome to the `Network-Based Data Analysis` project for the QCB 2023/2024 class
 Our analysis will focus on the following key aspects:
 
 1. **Exploratory Data Analysis (EDA):**
-   - Preliminary approach to analyzing data, through visualization and summary statistics (UMAP and PCA ), to understand its structure, patterns, and characteristics
-   - Investigating the gene signatures that distinguish between inflammation and fibrosis at the time of diagnosis.
+   - Preliminary approach to analyzing data, through visualization and summary statistics (UMAP and PCA), to understand its structure, patterns, and characteristics
+   - Investigating the gene signatures that distinguish between inflammation and fibrosis.
    - Exploring potential associations between gene profiles and clinical outcomes.
 
 3. **Predictive Modeling:**
-   - Feature selction to understand the genes which most contributes to each class.
+   - Feature selection to understand the genes which most contributes to each class.
    - Utilizing prediction analysis models to classify livers into inflammation or fibrosis based on gene expression profiles.
    - Validating predictions through statistical analyses, including cross-validation on each model.
 
@@ -26,8 +26,10 @@ Our analysis will focus on the following key aspects:
    - Utilize Enrichr for gene set enrichment analysis to uncover enriched functional categories and pathways associated with the identified differentially expressed genes.
    - Explore drug signatures and pharmacological data to investigate potential drug targets and mechanisms of action related to the observed gene expression changes.
 
-6. **Clinical Associations:**
-   - Investigating the relationship between gene signatures, the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo) will be used to manage this part.
+5. **Gene ontology and network:**
+   - Investigating the relationship between gene signatures, the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo) will be used.
+   - ORA with [gprofiler](https://biit.cs.ut.ee/gprofiler/gost)
+   - Network PPI with [STRING](https://string-db.org/)
 
 ## Project Sections
 
@@ -36,7 +38,7 @@ Our analysis will focus on the following key aspects:
 In this section, we will perform an exploratory analysis of the dataset, visualizing key features, and gaining insights into the distribution of molecular signatures.
 
 #### Sample Visualizations:
-- Boxplots depicting gene expression dataset and how is distributed.
+- Boxplots depicting gene expression dataset and how it is distributed.
 - 
 ### 2. Predictive Modeling
 
@@ -48,7 +50,7 @@ We will employ R packages for machine learning to build and evaluate prediction 
 
 ### 3. Clinical Associations
 
-This section will focus on exploring the clinical relevance of molecular signatures, including their correlation with traditional markers and clinical outcomes using SCUDO.
+This section will explore molecular signatures' clinical relevance, including their correlation with traditional markers and clinical outcomes using SCUDO.
 
 #### Visualizations:
 - `work in progress...`
