@@ -1,0 +1,9 @@
+"","metrics"
+"Accuracy",0.75
+"Kappa",0.5
+"AccuracyLower",0.428141538121811
+"AccuracyUpper",0.945139355472007
+"AccuracyNull",0.583333333333333
+"AccuracyPValue",0.191596007138429
+"McnemarPValue",1
+"F1",0.769230769230769
