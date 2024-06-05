@@ -1,5 +1,5 @@
 # Network-Based Data Analysis Project: Biliary Atresia Study
-### Project for the curse of Network-based Data Analysis QCB 2023/2024
+### Project for the class of Network-based Data Analysis QCB 2023/2024
 
 Link for the report [here](https://www.overleaf.com/project/65e5fb710b468abfd7e67ca4).
 
@@ -8,8 +8,7 @@ Link for the report [here](https://www.overleaf.com/project/65e5fb710b468abfd7e6
 Welcome to the `Network-Based Data Analysis` project for the QCB 2023/2024 class. In this project, we will delve into the world of molecular profiling in biliary atresia, utilizing the dataset GSE15235 obtained from a prospective observational study conducted by [Moyer, Katie, et al.](https://link.springer.com/article/10.1186/gm154). This study aims to explore the molecular signatures associated with inflammation and fibrosis in the livers of infants diagnosed with biliary atresia.
 
 ### Project Overview
-
-Our analysis will focus on the following key aspects:
+The analysis will focus on the following key aspects:
 
 1. **Exploratory Data Analysis (EDA):**
    - Preliminary approach to analyzing data, through visualization and summary statistics (UMAP and PCA), to understand its structure, patterns, and characteristics
@@ -30,29 +29,9 @@ Our analysis will focus on the following key aspects:
    - ORA with [gprofiler](https://biit.cs.ut.ee/gprofiler/gost)
    - Network PPI with [STRING](https://string-db.org/)
 
-## Project Sections
-
-### 1. Exploratory Data Analysis
-
-In this section, we will perform an exploratory analysis of the dataset, visualizing key features, and gaining insights into the distribution of molecular signatures.
-
-#### Sample Visualizations:
-- Boxplots depicting gene expression dataset and how it is distributed.
-- 
-### 2. Predictive Modeling
-
-We will employ R packages for machine learning to build and evaluate prediction models based on the unique molecular signatures identified in the study.
-
 #### Key R Packages:
 - [`caret`](https://topepo.github.io/caret/): for building and evaluating predictive models.
 - [`glmnet`](https://cran.r-project.org/web/packages/glmnet/index.html): for fitting feature selection (relaxed LASSO / Elastic net).
-
-### 3. Clinical Associations
-
-This section will explore molecular signatures' clinical relevance, including their correlation with traditional markers and clinical outcomes using SCUDO.
-
-#### Visualizations:
-- `work in progress...`
 
 ## Conclusion
 
