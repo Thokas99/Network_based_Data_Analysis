@@ -1,6 +1,16 @@
 # Network-Based Data Analysis Project: Biliary Atresia Study
 ### Project for the class of Network-based Data Analysis QCB 2023/2024
 
+- [Introduction](#introduction)
+- [Project Overview](#project-overview)
+   - [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
+   - [Predictive Modeling](#predictive-modeling)
+   - [Differential Expression Analysis](#differential-expression-analysis)
+   - [Gene Ontology and Network Analysis](#gene-ontology-and-network-analysis)
+- [Key R Packages](#key-r-packages)
+- [Conclusion](#conclusion)
+
+
 Link for the report [here](https://www.overleaf.com/project/65e5fb710b468abfd7e67ca4).
 
 ## Introduction
