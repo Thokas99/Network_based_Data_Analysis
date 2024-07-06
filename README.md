@@ -2,8 +2,8 @@
 ### Project for the class of Network-based Data Analysis QCB 2023/2024
 
 - [Introduction](#introduction)
-- [Project Overview](#project-overview)
-  - [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
+- [Project Overview](#project_overview)
+  - [Exploratory Data Analysis (EDA)](#exploratory_data_analysis-eda)
   - [Predictive Modeling](#predictive-modeling)
   - [Differential Expression Analysis](#differential-expression-analysis)
   - [Gene Ontology and Network Analysis](#gene-ontology-and-network-analysis)
