@@ -45,14 +45,9 @@ The analysis will focus on the following key aspects:
 - [`glmnet`](https://cran.r-project.org/web/packages/glmnet/index.html): For fitting feature selection (relaxed LASSO / Elastic net).
 - [`GEOquery`](https://www.bioconductor.org/packages/release/bioc/html/GEOquery.html): For accessing and retrieving Gene Expression Omnibus (GEO) data.
 - [`limma`](https://bioconductor.org/packages/release/bioc/html/limma.html): For linear modeling of microarray data and differential expression analysis.
-- [`plotly`](https://plotly.com/r/): Interactive plotting library for creating dynamic and interactive visualizations.
 - [`FactoMineR`](https://cran.r-project.org/web/packages/FactoMineR/index.html): For multivariate exploratory data analysis, including PCA and clustering.
 - [`cluster`](https://cran.r-project.org/web/packages/cluster/index.html): To perform PAM (Partitioning Around Medoids) and other clustering methods.
-- [`enrichR`](https://cran.r-project.org/web/packages/enrichR/index.html): For gene set enrichment analysis to identify enriched biological pathways.
 - [`rScudo`](https://bioconductor.org/packages/release/bioc/html/rScudo.html): To perform SCUDO (Signature-based Clustering for Diagnostic Purposes) for classification.
-- [`EnhancedVolcano`](https://bioconductor.org/packages/release/bioc/html/EnhancedVolcano.html): For volcano plots with enhanced features for visualizing differential expression results.
-- [`umap`](https://cran.r-project.org/web/packages/umap/index.html): For dimensionality reduction and visualization using Uniform Manifold Approximation and Projection.
-- [`gprofiler2`](https://cran.r-project.org/web/packages/gprofiler2/index.html): Tools for functional enrichment analysis and gene set analysis.
 - [`tidyverse`](https://www.tidyverse.org/): A collection of R packages for data science, including ggplot2, dplyr, tidyr, readr, purrr, and tibble.
 
 ## Conclusion
