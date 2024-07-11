@@ -38,6 +38,8 @@ The analysis will focus on the following key aspects:
    - Investigating the relationship between gene signatures using the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo).
    - Performing Over-Representation Analysis (ORA) with [gprofiler](https://biit.cs.ut.ee/gprofiler/gost).
    - Analyzing Protein-Protein Interaction (PPI) networks with [STRING](https://string-db.org/).
+   - DAVID
+   - pathfindeR
 
 ### Key R Packages
 
