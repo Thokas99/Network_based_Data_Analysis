@@ -40,18 +40,7 @@ The analysis will focus on the following key aspects:
    - Analyzing Protein-Protein Interaction (PPI) networks with [STRING](https://string-db.org/).
    - DAVID
    - pathfindeR
-
-### Key R Packages
-
-- [`caret`](https://topepo.github.io/caret/): For building and evaluating predictive models.
-- [`glmnet`](https://cran.r-project.org/web/packages/glmnet/index.html): For fitting feature selection (relaxed LASSO / Elastic net).
-- [`GEOquery`](https://www.bioconductor.org/packages/release/bioc/html/GEOquery.html): For accessing and retrieving Gene Expression Omnibus (GEO) data.
-- [`limma`](https://bioconductor.org/packages/release/bioc/html/limma.html): For linear modeling of microarray data and differential expression analysis.
-- [`FactoMineR`](https://cran.r-project.org/web/packages/FactoMineR/index.html): For multivariate exploratory data analysis, including PCA and clustering.
-- [`cluster`](https://cran.r-project.org/web/packages/cluster/index.html): To perform PAM (Partitioning Around Medoids) and other clustering methods.
-- [`rScudo`](https://bioconductor.org/packages/release/bioc/html/rScudo.html): To perform SCUDO (Signature-based Clustering for Diagnostic Purposes) for classification.
-- [`tidyverse`](https://www.tidyverse.org/): A collection of R packages for data science, including ggplot2, dplyr, tidyr, readr, purrr, and tibble.
-
+   
 ## Conclusion
 This analysis sought to enhance the histological classification of biliary atresia (BA) by integrating machine learning with gene expression data from 47 infants diagnosed with the disease. The study involved unsupervised learning techniques, including UMAP and PAM clustering, which revealed an approximate division aligning with known molecular groups, despite some bias from sex-related probes. Various models were tested, with Random Forest outperforming LASSO due to a higher F1 score, and successfully classifying four previously unclassified samples.
 
