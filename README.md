@@ -53,8 +53,10 @@ The analysis will focus on the following key aspects:
 - [`tidyverse`](https://www.tidyverse.org/): A collection of R packages for data science, including ggplot2, dplyr, tidyr, readr, purrr, and tibble.
 
 ## Conclusion
+This analysis sought to enhance the histological classification of biliary atresia (BA) by integrating machine learning with gene expression data from 47 infants diagnosed with the disease. The study involved unsupervised learning techniques, including UMAP and PAM clustering, which revealed an approximate division aligning with known molecular groups, despite some bias from sex-related probes. Various models were tested, with Random Forest outperforming LASSO due to a higher F1 score, and successfully classifying four previously unclassified samples.
 
-By the end of this project, we aim to provide a comprehensive analysis of the biliary atresia dataset, shedding light on the potential network-based interactions underlying disease progression and clinical outcomes.
-- `Work in progress...`
-- `Work in progress...`
-- `Work in progress...`
+Key findings include the identification of high-importance genes such as SLC24A1, ARF6, and DUSP5, which were consistent with existing literature on BA. This suggests that machine learning models can not only classify samples but also highlight potential new targets for research. Differential expression analysis identified a significant number of differentially expressed genes (DEGs) between molecular groups, indicating potential distinct disease stages and revealing patterns that could be relevant for further investigation.
+
+Functional enrichment analysis using DAVID and gProfiler identified common terms related to collagen organization and inflammatory response across molecular groups. STRING analysis showed distinct clusters, while pathfindR highlighted terms associated with viral infections and diseases. Notably, DUSP5 emerged as a potential marker of external influence in BA, and ADRB2 could be a target for experimental treatment in early inflammatory stages.
+
+Overall, this study demonstrates the value of combining molecular insights with advanced machine learning models to understand BA better. Future research should focus on refining models, incorporating additional data, and exploring the inflammatory aspects of the disease to uncover further details and potential therapeutic targets.
