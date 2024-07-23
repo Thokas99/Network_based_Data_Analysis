@@ -31,8 +31,8 @@ The analysis will focus on the following key aspects:
    - Validating predictions through statistical analyses, including cross-validation on each model.
 
 3. **Differential Expression Analysis (DEGs):**
-   - Perform differential expression analysis to identify genes showing significant expression changes between experimental conditions.
-   - Utilize [Enrichr](https://maayanlab.cloud/Enrichr/) to explore drug signatures and pharmacological data to investigate potential drug targets and mechanisms of action related to the observed gene expression changes.
+   - Perform differential expression analysis to identify genes showing significant expression changes between experimental conditions with LIMMA.
+   - Compare the DEGs with the most important features from the random forest model.
 
 4. **Gene Ontology and Network Analysis:**
    - Investigating the relationship between gene signatures using the [SCUDO R library](https://www.cosbi.eu/prototypes/scudo).
